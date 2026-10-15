@@ -1,0 +1,12 @@
+{
+  "name": "@agentos/cipher",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Deterministic, code-safe message cipher that shrinks prompts before they reach an agent",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": ["dist"]
+}

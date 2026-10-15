@@ -1,0 +1,27 @@
+{
+  "port": 7777,
+  "host": "127.0.0.1",
+  "dataDir": "~/.agentos",
+  "distillModel": "claude-haiku-5-5",
+  "agents": [
+    {
+      "id": "agentos",
+      "name": "This repo (Claude Code)",
+      "kind": "claude",
+      "description": "Claude Code pre-set on this checkout",
+      "cwd": ".",
+      "model": "opus",
+      "permissionMode": "acceptEdits",
+      "codebook": "file"
+    },
+    {
+      "id": "scratch-codex",
+      "name": "Scratch (Codex)",
+      "kind": "codex",
+      "description": "Codex CLI in a scratch directory",
+      "cwd": "~/scratch",
+      "sandbox": "workspace-write",
+      "codebook": "file"
+    }
+  ]
+}

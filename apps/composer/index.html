@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>agentos composer</title>
+<style>
+  :root {
+    --bg: #0f1115; --panel: #171a21; --panel-2: #1e222b; --border: #2a2f3a;
+    --text: #e6e8ee; --muted: #8b93a7; --accent: #6ea8fe; --good: #4cc38a; --warn: #f5a524; --bad: #f36c6c;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--text); font: 14px/1.45 var(--sans); display: grid; grid-template-columns: 260px 1fr; }
+  aside { background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
+  aside h1 { font-size: 14px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  aside section { padding: 10px 8px; overflow: auto; }
+  aside section + section { border-top: 1px solid var(--border); flex: 1; }
+  .label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); padding: 4px 8px; display: flex; justify-content: space-between; align-items: center; }
+  .item { padding: 8px; border-radius: 6px; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+  .item:hover { background: var(--panel-2); }
+  .item.active { background: var(--panel-2); outline: 1px solid var(--border); }
+  .item .sub { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .item .kind { font-family: var(--mono); font-size: 11px; color: var(--accent); }
+  main { display: grid; grid-template-rows: auto 1fr auto; min-height: 0; }
+  header { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; }
+  header .title { font-weight: 600; }
+  .stat { color: var(--muted); font-size: 12px; } .stat b { color: var(--text); font-weight: 600; }
+  #transcript { overflow: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .msg { max-width: 920px; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; background: var(--panel); }
+  .msg.user { align-self: flex-end; background: #1b2434; border-color: #26344d; }
+  .msg.agent.error { border-color: var(--bad); }
+  .msg .meta { font-size: 11px; color: var(--muted); display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .msg .meta button { font-size: 11px; }
+  .msg .body { white-space: pre-wrap; word-break: break-word; }
+  .msg pre { background: #0b0d11; border: 1px solid var(--border); border-radius: 6px; padding: 8px; overflow: auto; font: 12px/1.4 var(--mono); margin: 6px 0; white-space: pre; }
+  .msg code { font: 12px var(--mono); background: #0b0d11; padding: 1px 4px; border-radius: 4px; }
+  .msg .sent { display: none; margin-top: 8px; border-top: 1px dashed var(--border); padding-top: 8px; font: 12px/1.4 var(--mono); white-space: pre-wrap; color: #c9d1e3; }
+  .msg.show-sent .sent { display: block; }
+  .tools { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .chip { font: 11px var(--mono); background: var(--panel-2); border: 1px solid var(--border); padding: 2px 6px; border-radius: 999px; color: var(--muted); }
+  .chip.warn { color: var(--warn); border-color: var(--warn); }
+  .chip.bad { color: var(--bad); border-color: var(--bad); }
+  footer { border-top: 1px solid var(--border); background: var(--panel); padding: 12px 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  footer .col { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  textarea { width: 100%; min-height: 140px; resize: vertical; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 10px; font: 13px/1.45 var(--sans); }
+  #preview { min-height: 140px; max-height: 320px; overflow: auto; background: #0b0d11; border: 1px solid var(--border); border-radius: 8px; padding: 10px; font: 12px/1.45 var(--mono); white-space: pre-wrap; color: #c9d1e3; }
+  .bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .bar .spacer { flex: 1; }
+  button { background: var(--panel-2); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; cursor: pointer; font: inherit; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); color: #0b0d11; border-color: var(--accent); font-weight: 600; }
+  button:disabled { opacity: .5; cursor: default; }
+  label.toggle { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); font-size: 12px; cursor: pointer; }
+  .savings { font: 12px var(--mono); }
+  .savings .good { color: var(--good); } .savings .muted { color: var(--muted); }
+  #status { font-size: 12px; color: var(--muted); }
+  .empty { color: var(--muted); padding: 40px; text-align: center; }
+  @media (max-width: 900px) { body { grid-template-columns: 1fr; } aside { display: none; } footer { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<aside>
+  <h1>agentos</h1>
+  <section>
+    <div class="label">Agents</div>
+    <div id="agents"></div>
+  </section>
+  <section>
+    <div class="label"><span>Sessions</span><button id="newSession" title="Start a fresh agent session">+ new</button></div>
+    <div id="sessions"></div>
+  </section>
+</aside>
+<main>
+  <header>
+    <span class="title" id="title">Pick an agent</span>
+    <span class="stat">saved <b id="tSaved">0</b> tok</span>
+    <span class="stat">sent <b id="tSent">0</b> tok</span>
+    <span class="stat">agent in/out <b id="tIn">0</b>/<b id="tOut">0</b></span>
+    <span class="stat">cost <b id="tCost">$0.00</b></span>
+    <span class="stat" id="runnerId"></span>
+  </header>
+  <div id="transcript"><div class="empty">Select an agent on the left, then compose. Ctrl/⌘+Enter sends.</div></div>
+  <footer>
+    <div class="col">
+      <textarea id="input" placeholder="Write naturally. The composer strips filler, abbreviates, and references blocks the agent has already seen."></textarea>
+      <div class="bar">
+        <label class="toggle"><input type="checkbox" id="modeCipher" checked> cipher</label>
+        <label class="toggle"><input type="checkbox" id="aggressive"> aggressive</label>
+        <button id="distill" title="Rewrite with a cheap model first (needs ANTHROPIC_API_KEY on the hub)" disabled>distill</button>
+        <span class="spacer"></span>
+        <span id="status"></span>
+        <button id="send" class="primary">Send</button>
+      </div>
+    </div>
+    <div class="col">
+      <div id="preview"></div>
+      <div class="bar">
+        <span class="savings" id="savings"><span class="muted">preview of what the agent receives</span></span>
+        <span class="spacer"></span>
+        <span class="stat" id="refs"></span>
+      </div>
+    </div>
+  </footer>
+</main>
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const state = { agents: [], caps: {}, agent: null, sessions: [], session: null, busy: false };
+
+  const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  function render(md) {
+    // tiny renderer: fenced code, inline code, line breaks. Enough for agent replies.
+    let out = "", last = 0;
+    const re = /```(\w*)\n([\s\S]*?)```/g; let m;
+    while ((m = re.exec(md))) { out += inline(md.slice(last, m.index)); out += `<pre>${esc(m[2])}</pre>`; last = m.index + m[0].length; }
+    out += inline(md.slice(last));
+    return out;
+    function inline(t) { return esc(t).replace(/`([^`\n]+)`/g, "<code>$1</code>"); }
+  }
+  const fmt = (n) => (n == null ? "?" : Number(n).toLocaleString());
+
+  async function api(path, body, method) {
+    const res = await fetch(path, { method: method || (body ? "POST" : "GET"), headers: body ? { "content-type": "application/json" } : {}, body: body ? JSON.stringify(body) : undefined });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.statusText);
+    return data;
+  }
+
+  async function loadAgents() {
+    const d = await api("/api/agents");
+    state.agents = d.agents; state.caps = d.capabilities;
+    $("distill").disabled = !state.caps.distill;
+    $("distill").title = state.caps.distill ? `rewrite with ${state.caps.distillModel} before ciphering` : "set ANTHROPIC_API_KEY on the hub to enable distill";
+    $("agents").innerHTML = state.agents.map((a) => `
+      <div class="item" data-id="${a.id}">
+        <div>${esc(a.name)} ${a.hasCodebook === false ? '<span class="chip warn" title="run: agentos setup ' + a.id + '">no codebook</span>' : ""}</div>
+        <div class="kind">${a.kind}${a.model ? " · " + esc(a.model) : ""}</div>
+        <div class="sub" title="${esc(a.cwd)}">${esc(a.description || a.cwd)}</div>
+      </div>`).join("");
+    for (const el of $("agents").children) el.onclick = () => selectAgent(el.dataset.id);
+    if (state.agents.length && !state.agent) selectAgent(state.agents[0].id);
+  }
+
+  async function selectAgent(id) {
+    state.agent = state.agents.find((a) => a.id === id); state.session = null;
+    for (const el of $("agents").children) el.classList.toggle("active", el.dataset.id === id);
+    await loadSessions();
+    if (state.sessions.length) await openSession(state.sessions[0].id); else showSession(null);
+    preview();
+  }
+
+  async function loadSessions() {
+    const d = await api(`/api/agents/${state.agent.id}/sessions`);
+    state.sessions = d.sessions;
+    $("sessions").innerHTML = state.sessions.map((s) => `
+      <div class="item" data-id="${s.id}">
+        <div>${esc(s.title)}</div>
+        <div class="sub">${new Date(s.updatedAt).toLocaleString()} · saved ~${fmt(s.totals.savedTokens)} tok</div>
+      </div>`).join("") || '<div class="sub" style="padding:8px">no sessions yet</div>';
+    for (const el of $("sessions").children) if (el.dataset.id) el.onclick = () => openSession(el.dataset.id);
+  }
+
+  async function openSession(id) {
+    const d = await api(`/api/agents/${state.agent.id}/sessions/${id}`);
+    showSession(d.session);
+  }
+
+  function showSession(s) {
+    state.session = s;
+    for (const el of $("sessions").children) el.classList.toggle("active", !!s && el.dataset.id === s.id);
+    $("title").textContent = s ? s.title : `${state.agent ? state.agent.name : ""} · new session`;
+    const t = s ? s.totals : { savedTokens: 0, sentTokens: 0, inputTokens: 0, outputTokens: 0, costUsd: 0 };
+    $("tSaved").textContent = "~" + fmt(t.savedTokens); $("tSent").textContent = "~" + fmt(t.sentTokens);
+    $("tIn").textContent = fmt(t.inputTokens); $("tOut").textContent = fmt(t.outputTokens); $("tCost").textContent = "$" + (t.costUsd || 0).toFixed(4);
+    $("runnerId").textContent = s && s.runnerSessionId ? `${state.agent.kind} session ${s.runnerSessionId.slice(0, 8)}…` : "";
+    const tr = $("transcript"); tr.innerHTML = "";
+    if (!s || !s.messages.length) { tr.innerHTML = '<div class="empty">Fresh session. The first message starts the agent process; later ones resume it.</div>'; return; }
+    for (const m of s.messages) tr.appendChild(bubble(m));
+    tr.scrollTop = tr.scrollHeight;
+    preview();
+  }
+
+  function bubble(m, live) {
+    const el = document.createElement("div");
+    el.className = `msg ${m.role}${m.isError ? " error" : ""}`;
+    const meta = [];
+    if (m.role === "user") {
+      if (m.stats) meta.push(`${m.mode} · ~${m.stats.tokensBefore} → ~${m.stats.tokensAfter} tok` + (m.stats.savedTokens ? ` (−${m.stats.savedPct}%)` : ""));
+      if (m.refs && m.refs.some((r) => r.status === "reused")) meta.push(`${m.refs.filter((r) => r.status === "reused").length} block(s) referenced, not resent`);
+    } else {
+      if (m.usage) meta.push(`in ${fmt(m.usage.inputTokens)} (+${fmt(m.usage.cacheReadTokens || 0)} cached) · out ${fmt(m.usage.outputTokens)}`);
+      if (m.costUsd != null) meta.push(`$${m.costUsd.toFixed(4)}`);
+      if (m.durationMs != null) meta.push(`${(m.durationMs / 1000).toFixed(1)}s`);
+      if (live) meta.push("running…");
+    }
+    el.innerHTML = `<div class="meta">${meta.map((x) => `<span>${esc(x)}</span>`).join("")}${m.sent ? '<button class="toggleSent">show sent</button>' : ""}</div>
+      <div class="body">${render(m.text || "")}</div>${m.sent ? `<div class="sent">${esc(m.sent)}</div>` : ""}<div class="tools"></div>`;
+    const tb = el.querySelector(".toggleSent");
+    if (tb) tb.onclick = () => { el.classList.toggle("show-sent"); tb.textContent = el.classList.contains("show-sent") ? "hide sent" : "show sent"; };
+    return el;
+  }
+
+  let previewTimer;
+  function preview() {
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(async () => {
+      const text = $("input").value;
+      if (!text.trim()) { $("preview").textContent = ""; $("savings").innerHTML = '<span class="muted">preview of what the agent receives</span>'; $("refs").textContent = ""; return; }
+      try {
+        const d = await api("/api/cipher", { agentId: state.agent && state.agent.id, sessionId: state.session && state.session.id, text, mode: $("modeCipher").checked ? "cipher" : "clear", aggressive: $("aggressive").checked });
+        $("preview").textContent = d.sent;
+        const s = d.stats;
+        $("savings").innerHTML = `~${s.tokensBefore} → ~${s.tokensAfter} tok <span class="${s.savedTokens > 0 ? "good" : "muted"}">(${s.savedTokens > 0 ? "−" + s.savedPct + "%" : "no change"})</span>`;
+        const reused = (d.refs || []).filter((r) => r.status === "reused");
+        $("refs").textContent = reused.length ? `${reused.length} block(s) already in context → referenced` : (d.refs || []).length ? `${d.refs.length} block(s) tagged` : "";
+      } catch (e) { $("preview").textContent = "preview failed: " + e.message; }
+    }, 150);
+  }
+
+  async function send() {
+    const text = $("input").value;
+    if (!text.trim() || !state.agent || state.busy) return;
+    state.busy = true; $("send").disabled = true; $("status").textContent = "sending…";
+    const mode = $("modeCipher").checked ? "cipher" : "clear";
+    const tr = $("transcript");
+    if (!state.session || !state.session.messages.length) tr.innerHTML = "";
+    const userEl = bubble({ role: "user", text, mode }); tr.appendChild(userEl);
+    const agentMsg = { role: "agent", text: "" };
+    const agentEl = bubble(agentMsg, true); tr.appendChild(agentEl);
+    const body = agentEl.querySelector(".body"), tools = agentEl.querySelector(".tools");
+    tr.scrollTop = tr.scrollHeight;
+    try {
+      const res = await fetch("/api/send", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ agentId: state.agent.id, sessionId: state.session && state.session.id, text, mode, aggressive: $("aggressive").checked }) });
+      if (!res.ok) throw new Error((await res.json()).error || res.statusText);
+      const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = "";
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        let i;
+        while ((i = buf.indexOf("\n\n")) >= 0) {
+          const chunk = buf.slice(0, i); buf = buf.slice(i + 2);
+          const ev = (chunk.match(/^event: (.+)$/m) || [])[1]; const data = JSON.parse((chunk.match(/^data: (.+)$/m) || [])[1] || "{}");
+          handle(ev, data);
+        }
+      }
+    } catch (e) {
+      tools.insertAdjacentHTML("beforeend", `<span class="chip bad">${esc(e.message)}</span>`);
+    } finally {
+      state.busy = false; $("send").disabled = false; $("status").textContent = "";
+    }
+    function handle(ev, d) {
+      if (ev === "session") {
+        const meta = userEl.querySelector(".meta");
+        meta.innerHTML = `<span>${d.mode} · ~${d.stats.tokensBefore} → ~${d.stats.tokensAfter} tok${d.stats.savedTokens ? ` (−${d.stats.savedPct}%)` : ""}</span>` + (d.sent !== text ? '<button class="toggleSent">show sent</button>' : "");
+        if (d.sent !== text) { userEl.insertAdjacentHTML("beforeend", `<div class="sent">${esc(d.sent)}</div>`); const b = meta.querySelector(".toggleSent"); b.onclick = () => { userEl.classList.toggle("show-sent"); b.textContent = userEl.classList.contains("show-sent") ? "hide sent" : "show sent"; }; }
+        if (!state.session) { state.session = { id: d.sessionId, messages: [] }; }
+        $("input").value = ""; preview();
+      } else if (ev === "warning") tools.insertAdjacentHTML("beforeend", `<span class="chip warn">${esc(d.message)}</span>`);
+      else if (ev === "init") $("status").textContent = `${state.agent.kind} running (${d.model || ""})`;
+      else if (ev === "text") { agentMsg.text += (agentMsg.text ? "\n" : "") + d.text; body.innerHTML = render(agentMsg.text); tr.scrollTop = tr.scrollHeight; }
+      else if (ev === "tool") tools.insertAdjacentHTML("beforeend", `<span class="chip" title="${esc(JSON.stringify(d.input || "").slice(0, 300))}">${esc(d.name)}</span>`);
+      else if (ev === "error") tools.insertAdjacentHTML("beforeend", `<span class="chip bad">${esc(d.message)}</span>`);
+      else if (ev === "stderr") { /* visible in the hub's terminal */ }
+      else if (ev === "done") {
+        agentEl.replaceWith(bubble(d.message));
+        loadSessions().then(() => openSession(d.sessionId));
+      }
+    }
+  }
+
+  async function distill() {
+    const text = $("input").value; if (!text.trim()) return;
+    $("distill").disabled = true; $("status").textContent = "distilling…";
+    try { const d = await api("/api/distill", { text }); $("input").value = d.text; preview(); $("status").textContent = `distilled ~${d.stats.tokensBefore} → ~${d.stats.tokensAfter} tok`; }
+    catch (e) { $("status").textContent = "distill failed: " + e.message; }
+    finally { $("distill").disabled = false; }
+  }
+
+  $("input").addEventListener("input", preview);
+  $("modeCipher").addEventListener("change", preview);
+  $("aggressive").addEventListener("change", preview);
+  $("send").onclick = send;
+  $("distill").onclick = distill;
+  $("newSession").onclick = () => showSession(null);
+  $("input").addEventListener("keydown", (e) => { if ((e.ctrlKey || e.metaKey) && e.key === "Enter") send(); });
+  loadAgents().catch((e) => { $("transcript").innerHTML = `<div class="empty">${esc(e.message)}</div>`; });
+})();
+</script>
+</body>
+</html>

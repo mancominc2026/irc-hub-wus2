@@ -1,0 +1,15 @@
+{
+  "name": "@agentos/hub",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Agent registry, runners, sessions and the composer server",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "agentos": "dist/cli.js"
+  },
+  "dependencies": {
+    "@agentos/cipher": "0.1.0",
+    "@anthropic-ai/sdk": "^0.134.0"
+  }
+}
