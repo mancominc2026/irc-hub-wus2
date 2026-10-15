@@ -1,3 +1,9 @@
 *.key.pem
 *.req.pem
 *.tgz
+# agentos
+agentos/node_modules/
+agentos/**/node_modules/
+agentos/**/dist/
+agentos/**/*.tsbuildinfo
+agentos/agents.json

@@ -1,0 +1,26 @@
+{
+  "name": "agentos",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Composer-level chat hub for pre-configured Claude Code / Codex agents, with a token-saving message cipher",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "tsc -b packages/cipher packages/hub",
+    "test": "npm run build && node --test \"packages/*/test/*.test.mjs\"",
+    "start": "node packages/hub/dist/cli.js serve",
+    "agentos": "node packages/hub/dist/cli.js"
+  },
+  "bin": {
+    "agentos": "packages/hub/dist/cli.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.7.0"
+  }
+}
