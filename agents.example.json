@@ -5,11 +5,11 @@
   "distillModel": "claude-haiku-5-5",
   "agents": [
     {
-      "id": "irc-hub",
-      "name": "IRC hub (Claude Code)",
+      "id": "agentos",
+      "name": "This repo (Claude Code)",
       "kind": "claude",
-      "description": "Claude Code pre-set on the irc-hub-wus2 checkout",
-      "cwd": "..",
+      "description": "Claude Code pre-set on this checkout",
+      "cwd": ".",
       "model": "opus",
       "permissionMode": "acceptEdits",
       "codebook": "file"
